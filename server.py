@@ -16,7 +16,10 @@ def handle_client(conn, addr):
             data = conn.recv(1024).decode("utf-8")
             if not data:
                 break
-            print(f"Received from {addr}: {data}")
+            if data == "end":
+                sys.exit(0)
+
+            # funky server side processing for the accelerometer data we receive
 
             for client in clients:
                 if client != conn:
@@ -41,7 +44,7 @@ def start_server():
                 target=handle_client, args=(conn, addr), daemon=True
             ).start()
 
-        print("Two clients connected. Ready to relay messages.")
+        # funky server side code to send something to the clients -> store game variables here. Ronnie might set up database here
 
 
 if __name__ == "__main__":
