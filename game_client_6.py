@@ -14,7 +14,7 @@ clock = pygame.time.Clock()
 font = pygame.font.Font(None, 36)
 
 # Network setup
-SERVER_IP = "34.228.6.66"  
+SERVER_IP = "server ip - may need to run ifcongig in terminal to get + also lets not dox ronnie"  
 SERVER_PORT = 12345
 BUFFER_SIZE = 1024
 
