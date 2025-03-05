@@ -66,32 +66,47 @@ def handle_client(conn, addr):
     print(f"Client {addr} connected.")
     clients.append(conn)
 
-    #receiving data from clients
-    while True:
-        try:
-            data = conn.recv(1024).decode("utf-8")
-            if not data:
-                break
+    try: 
+        with conn:
+            print(f"Connected by {addr}")
 
-            if data.lower() == "exit":
-                print(f"Client {addr} requested exit.")
-                break
-
-            response = fetch_game_info(data)
-            conn.send(response.encode())
-
-            #broadcasting messages to other clients
-            #for client in clients:
-                #if client != conn:
-                    #client.sendall(f"Client {addr}: {data}".encode("utf-8"))
+            #receiving data from clients
+            while True:
+                data = conn.recv(1024).decode("utf-8")
+                print(f"Receiving")
+                print(data)
+                if not data:
+                    break
                     
-        except Exception as e:
-            print(f"Error handling client {addr}: {e}")
-            break
+                print(f"Data is coming through: {data}")
+                try:
+                    game_id = int(data)
+                    response = fetch_game_info(data)
+                    conn.send(response.encode())
+                                            
+                except ValueError:
+                    #Its FPGA Data
+                    print(f"FPGA Data from {addr}: {data}")
+                        
+                
 
-    print(f"Client {addr} disconnected.")
-    clients.remove(conn)
-    conn.close()
+                if data.lower() == "exit":
+                    print(f"Client {addr} requested exit.")
+                    break
+
+                    #broadcasting messages to other clients
+                    #for client in clients:
+                        #if client != conn:
+                            #client.sendall(f"Client {addr}: {data}".encode("utf-8"))
+                            
+    except Exception as e:
+        print(f"Error handling client {addr}: {e}")
+        
+
+    finally:
+        print(f"Client {addr} disconnected.")
+        clients.remove(conn)
+        conn.close()
 
 
 def start_server():
