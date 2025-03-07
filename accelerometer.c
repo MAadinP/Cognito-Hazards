@@ -1,24 +1,3 @@
-/*
- * Integrated Accelerometer and Command Processing Example
- *
- * This application integrates a simple JTAG UART command interface (based on
- * the provided example code) with an accelerometer reading project (Lab 3).
- * It supports two modes:
- *    Mode 0: No filtering – use raw accelerometer data.
- *    Mode 1: Use a FIR filter to filter the accelerometer data.
- *
- * Commands (sent via JTAG UART):
- *    '0' : switch to Mode 0 (no filtering)
- *    '1' : switch to Mode 1 (filtering)
- *    'q' : quit (stop processing, if desired)
- *
- * The application polls both the accelerometer and the JTAG UART. Since the
- * Nios II is polling the JTAG, you should consider the polling frequency so
- * that the accelerometer is sampled often enough.
- *
- * Compile with the appropriate Nios II system libraries.
- */
-
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
@@ -31,6 +10,8 @@
  #include "sys/alt_irq.h"
  #include "sys/times.h"
  #include "alt_types.h"
+
+ #include "sys/alt_stdio.h"
  
  #define FILTER_ORDER 50  
  
@@ -128,6 +109,7 @@
  {
      alt_putstr("Duel Game\n");
      alt_32 x_read;
+     alt_u8 out;
      alt_up_accelerometer_spi_dev * acc_dev;
      acc_dev = alt_up_accelerometer_spi_open_dev("/dev/accelerometer_spi");
      if (acc_dev == NULL) { 
@@ -138,7 +120,8 @@
      timer_init(sys_timer_isr);
  
      int mode = 1;  
-     alt_printf("Default mode: %d (2 = calibration, 1 = filtering, 0 = raw)\n", mode);
+    //  alt_printf("Default mode: %d (2 = calibration, 1 = filtering, 0 = raw)\n", mode);
+    alt_printf("Default mode: %d (1 = filtering, 0 = raw)\n", mode);
  
      while (1) {
  
@@ -152,10 +135,10 @@
                  mode = 1;
                  alt_printf("Switched to Mode 1 (filtering).\n");
              }
-             else if (cmd == '2') {
-                mode = 2;
-                alt_printf("Switched to Mode 2 (calibration).\n");
-            }
+            //  else if (cmd == '2') {
+            //     mode = 2;
+            //     alt_printf("Switched to Mode 2 (calibration).\n");
+            // }
              else if (cmd == 'q' || cmd == 'Q') {
                  alt_putstr("Exiting...\n");
                  break;
@@ -179,10 +162,12 @@
                 convert_read((alt_32)processed_value, &level, &led);
 
                 // add the uart return data here
+                out = *level;
+                alt_putstring(out);
             }
-            else if (mode == 2) {
-                // idk what we want for calibration at this stage but that goes here 
-            }
+            // else if (mode == 2) {
+            //     // idk what we want for calibration at this stage but that goes here 
+            // }
         }
  
      }
