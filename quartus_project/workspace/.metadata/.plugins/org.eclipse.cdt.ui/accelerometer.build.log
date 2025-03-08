@@ -1,0 +1,6 @@
+22:15:55 **** Clean-only build of configuration Nios II for project accelerometer ****
+make clean 
+[accelerometer clean complete]
+
+22:15:55 Build Finished (took 155ms)
+
