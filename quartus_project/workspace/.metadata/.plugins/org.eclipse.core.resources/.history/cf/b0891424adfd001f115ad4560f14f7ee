@@ -151,7 +151,7 @@
         if (mode != 0) {
             if (mode == 1) {
                 alt_up_accelerometer_spi_read_x_axis(acc_dev, &x_read);
-                alt_printf("Raw data: %x\n", x_read);
+                alt_printf("Raw data: %d\n", x_read);
 
                 float x_value = (float)x_read;
                 float processed_value = x_value;
@@ -164,9 +164,7 @@
                 // add the uart return data here
 //                out = *level;
 //                alt_putstring(out);
-//                alt_putstr(std::tostring(processed_value));
-//                alt_printf("Filtered x: %.2f\n", processed_value);
-
+                alt_putstring(processed_value);
             }
             // else if (mode == 2) {
             //     // idk what we want for calibration at this stage but that goes here
