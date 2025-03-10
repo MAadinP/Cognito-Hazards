@@ -6,6 +6,53 @@ import sys
 import time
 import queue
 import re
+import subprocess
+import subprocess
+
+NIOS_CMD_SHELL_BAT = "C:/intelFPGA_lite/18.1/nios2eds/Nios II Command Shell.bat"
+
+def send_on_jtag(cmd):
+    # Validate the input to ensure it's at least one character long
+    assert len(cmd) >= 1, "Please make the cmd a single character or more"
+
+    # Create a subprocess to run the Nios II command shell
+    process = subprocess.Popen(
+        NIOS_CMD_SHELL_BAT,
+        bufsize=0,  # No buffer to ensure real-time interaction
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True  # Allow command shell execution
+    )
+
+    try:
+        # Send the command to the Nios II terminal, formatted for the shell
+        command = "nios2-terminal <<< \"{}\"".format(cmd)
+        vals, err = process.communicate(input=command.encode('utf-8'), timeout=10)
+
+        # Check for errors in stderr
+        if err:
+            print(f"Error: {err.decode('utf-8')}")
+            return "Error occurred"
+        
+        # Return the output of the command execution
+        return vals.decode('utf-8')
+
+    except subprocess.TimeoutExpired:
+        # Handle timeout if the command takes too long
+        process.kill()
+        print("Timeout expired while trying to communicate with the FPGA")
+        return "Timeout"
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        process.kill()
+        return "Error"
+
+    finally:
+        process.terminate()
+
+
 
 # Server connection details
 HOST = "ec2-3-88-178-208.compute-1.amazonaws.com"
@@ -23,14 +70,27 @@ accel_data_queue = queue.Queue()
 def data_extraction(data):
     tokens = data.split(" ")
     pairs = [[tokens[i+1][-2:], tokens[i][-2:]] for i in range(0, len(tokens)-1, 2)]
+    if not pairs:
+        print("No matches in ^&%^%&^*^&)&&(&(*&(&*")
+        print(data)
+        print(pairs)
+        
+        return [100,10000000000000000000000000000000000000000000000000000000000000000000000000000]
+        #mapping to correct range
     coords = pairs[-2]
+    print(f"Printing range of values: {coords}")
     for i in range(len(coords)):
         coords[i] = int(coords[i], 16)
+    #coords[1] = round(MIN_X_VAL + (coords[0] / 0xFFFFFFFF) * (MAX_X_VAL - MIN_X_VAL))
+    #coords[0] = round(MIN_Y_VAL + (coords[1] / 0xFFFFFFFF) * (MAX_Y_VAL - MIN_Y_VAL))
+    #slope = (output_end - output_start) / (input_end - input_start)
+    #output = output_start + slope * (input - input_start)
+
     slope = (MAX_X_VAL - MIN_X_VAL) / (int('0xFF',16))
     coords[0] = round(MIN_X_VAL + slope * coords[0])
     coords[1] = round(MIN_Y_VAL + slope * coords[1])
     
-    return coords if coords is not None else []
+    return coords
 
 
 def receive_messages(client_socket):
@@ -39,6 +99,10 @@ def receive_messages(client_socket):
             data = client_socket.recv(1024).decode("utf-8")
             if not data:
                 break
+            if data == "on":
+                send_on_jtag("1")
+            elif data == "off":
+                send_on_jtag("0")
             print(f"Server: {data}")
         except:
             print("\nDisconnected from server.")
@@ -95,12 +159,17 @@ def accelerometer_reader(stop_event, client_socket):
             data = ju.read()
             if data and data.strip():
                 # Put data in queue and also print immediately
+                timestamp = time.strftime("%H:%M:%S", time.localtime())
                 formatted_data = f"{data.strip()}"
+
+                #print on the client-side
 
                 #send to server
                 clean_coords = data_extraction(formatted_data)
                 clean_coords.append(1)
+                print(f"Here are the clean coords: {clean_coords}")
                 send_to_server(clean_coords, client_socket)
+                print(f"CHECKING IF WE PASS THIS MULTIPLE TIMES")
 
                 #put data in queue
                 accel_data_queue.put((timestamp, data.strip()))
