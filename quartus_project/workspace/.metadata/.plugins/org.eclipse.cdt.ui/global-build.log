@@ -1,26 +1,22 @@
-14:40:18 **** Incremental Build of configuration Nios II for project accelerometer_bsp ****
+14:51:01 **** Incremental Build of configuration Nios II for project accelerometer_bsp ****
 make all 
 [BSP build complete]
-14:40:27 **** Build of configuration Nios II for project accelerometer ****
+14:51:08 **** Build of configuration Nios II for project accelerometer ****
 make all 
 Info: Building ../accelerometer_bsp/
 C:/intelFPGA_lite/18.1/nios2eds/bin/gnu/H-x86_64-mingw32/bin/make --no-print-directory -C ../accelerometer_bsp/
 [BSP build complete]
 Info: Compiling hello_world_small.c to obj/default/hello_world_small.o
 nios2-elf-gcc -xc -MP -MMD -c -I../accelerometer_bsp//HAL/inc -I../accelerometer_bsp/ -I../accelerometer_bsp//drivers/inc  -pipe -D__hal__ -DALT_NO_C_PLUS_PLUS -DALT_NO_CLEAN_EXIT -D'exit(a)=_exit(a)' -DALT_NO_EXIT -DALT_USE_DIRECT_DRIVERS -DALT_NO_INSTRUCTION_EMULATION -DALT_USE_SMALL_DRIVERS -DSMALL_C_LIB -DALT_SINGLE_THREADED    -Os -g -Wall   -mno-hw-div -mno-hw-mul -mno-hw-mulx -mgpopt=global  -o obj/default/hello_world_small.o hello_world_small.c
-hello_world_small.c: In function 'main':
-hello_world_small.c:210:9: warning: unused variable 'mode' [-Wunused-variable]
-     int mode = 1;
-         ^
 Info: Linking accelerometer.elf
 nios2-elf-g++  -T'../accelerometer_bsp//linker.x' -msys-crt0='../accelerometer_bsp//obj/HAL/src/crt0.o' -msys-lib=hal_bsp -L../accelerometer_bsp/  -msmallc  -Wl,-Map=accelerometer.map   -Os -g -Wall   -mno-hw-div -mno-hw-mul -mno-hw-mulx -mgpopt=global  -o accelerometer.elf obj/default/hello_world_small.o -lm -msys-lib=m
 nios2-elf-insert accelerometer.elf --thread_model hal --cpu_name cpu --qsys true --simulation_enabled false --stderr_dev jtag_uart --stdin_dev jtag_uart --stdout_dev jtag_uart --sopc_system_name nios_accelerometer --quartus_project_dir "C:/Users/ollyj/Docs_local/info_proc/cw/Cognito-Hazards/quartus_project" --jdi C:/Users/ollyj/Docs_local/info_proc/cw/Cognito-Hazards/quartus_project/software/accelerometer_bsp/../../DE10_LITE_Golden_Top.jdi --sopcinfo C:/Users/ollyj/Docs_local/info_proc/cw/Cognito-Hazards/quartus_project/software/accelerometer_bsp/../../nios_accelerometer.sopcinfo
-Info: (accelerometer.elf) 9716 Bytes program size (code + initialized data).
+Info: (accelerometer.elf) 9872 Bytes program size (code + initialized data).
 Info:                     54 KBytes free for stack + heap.
 Info: Creating accelerometer.objdump
 nios2-elf-objdump --disassemble --syms --all-header --source accelerometer.elf >accelerometer.objdump
 [accelerometer build complete]
-14:40:30 **** Incremental Build of configuration Nios II for project accelerometer ****
+14:51:11 **** Incremental Build of configuration Nios II for project accelerometer ****
 make all 
 Info: Building ../accelerometer_bsp/
 C:/intelFPGA_lite/18.1/nios2eds/bin/gnu/H-x86_64-mingw32/bin/make --no-print-directory -C ../accelerometer_bsp/

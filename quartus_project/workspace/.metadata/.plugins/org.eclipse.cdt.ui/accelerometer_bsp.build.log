@@ -1,6 +1,6 @@
-14:40:18 **** Incremental Build of configuration Nios II for project accelerometer_bsp ****
+14:51:01 **** Incremental Build of configuration Nios II for project accelerometer_bsp ****
 make all 
 [BSP build complete]
 
-14:40:19 Build Finished (took 1s.118ms)
+14:51:02 Build Finished (took 1s.474ms)
 

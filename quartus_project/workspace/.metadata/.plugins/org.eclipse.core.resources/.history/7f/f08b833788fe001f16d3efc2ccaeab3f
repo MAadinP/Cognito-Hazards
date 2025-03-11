@@ -232,7 +232,6 @@ int main(void)
                 break;
             }
             else {
-            	mode = 0;
 //                alt_printf("Unrecognized command: %c\n", cmd);
             }
         }

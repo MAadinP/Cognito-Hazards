@@ -217,11 +217,11 @@ int main(void)
        if (cmd != -1) {
             if (cmd == '0') {
                 mode = 0;
-//                alt_printf("Switched to Mode 0 (off).\n");
+                alt_printf("Switched to Mode 0 (off).\n");
             }
             else if (cmd == '1') {
                 mode = 1;
-//                alt_printf("Switched to Mode 1 (filtering).\n");
+                alt_printf("Switched to Mode 1 (filtering).\n");
             }
            //  else if (cmd == '2') {
            //     mode = 2;
@@ -232,13 +232,12 @@ int main(void)
                 break;
             }
             else {
-            	mode = 0;
-//                alt_printf("Unrecognized command: %c\n", cmd);
+                alt_printf("Unrecognized command: %c\n", cmd);
             }
         }
 
-//       if (mode != 0) {
-            if (mode == 1) {
+       if (mode != 0) {
+        //    if (mode == 1) {
                 alt_up_accelerometer_spi_read_x_axis(acc_dev, &x_read);
                 alt_up_accelerometer_spi_read_y_axis(acc_dev, &y_read);
             //    alt_printf("Raw data: %x\n", x_read);

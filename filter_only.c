@@ -118,7 +118,6 @@ void int_to_str(int num, char *buf) {
         temp[i++] = '0' + (num % 10);
         num /= 10;
     }
-    // Reverse the digits into the output buffer.
     int j;
     for (j = 0; j < i; j++) {
         buf[j] = temp[i - j - 1];
@@ -126,61 +125,48 @@ void int_to_str(int num, char *buf) {
     buf[i] = '\0';
 }
 
-// Custom function to convert a float to a string with a given precision.
-// 'precision' is the number of digits after the decimal point.
 void float_to_string_custom(float num, char *buf, int precision) {
     char *ptr = buf;
 
-    // Handle negative numbers.
     if (num < 0) {
         *ptr++ = '-';
         num = -num;
     }
 
-    // Separate the integer part.
     int int_part = (int)num;
     char int_buf[12];
     int_to_str(int_part, int_buf);
 
-    // Copy the integer part into the output buffer.
     char *p = int_buf;
     while (*p) {
         *ptr++ = *p++;
     }
 
-    // If precision is specified, process the fractional part.
     if (precision > 0) {
         *ptr++ = '.';
         float fractional = num - int_part;
 
-        // Calculate multiplier for the required precision (10^precision).
         int multiplier = 1;
         for (int i = 0; i < precision; i++) {
             multiplier *= 10;
         }
 
-        // Convert the fractional part to an integer (with rounding).
         int frac_int = (int)(fractional * multiplier + 0.5f);
 
-        // Convert the fractional integer to string.
         char frac_buf[12];
         int_to_str(frac_int, frac_buf);
 
-        // Determine the length of the fractional string.
         int len = 0;
         p = frac_buf;
         while (*p++) {
             len++;
         }
 
-        // If the fractional part is shorter than the required precision,
-        // pad with leading zeros.
         int pad = precision - len;
         while (pad-- > 0) {
             *ptr++ = '0';
         }
 
-        // Copy the fractional part.
         p = frac_buf;
         while (*p) {
             *ptr++ = *p++;
