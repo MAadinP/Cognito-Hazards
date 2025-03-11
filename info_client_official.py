@@ -20,7 +20,7 @@ latest_game = None
 waiting_for_other = False
 
 # Network setup
-SERVER_IP = "ec2-3-88-178-208.compute-1.amazonaws.com"
+SERVER_IP = "ec2-54-224-106-28.compute-1.amazonaws.com"
 SERVER_PORT = 12345
 BUFFER_SIZE = 1024
 
@@ -46,7 +46,7 @@ boss_hp_max = 3000
 boss_hp_bar_length = 400
 boss_hp_ratio = boss_hp_max / boss_hp_bar_length
 
-player_health = {1: 100, 2: 100}
+player_health = {1: 250, 2: 250}
 enemy_attack = {1: False, 2: False}
 enemy_attack_timer = {1: 0, 2: 0}
 ATTACK_WINDOW = 1000  # milliseconds during which a block is attempted
@@ -185,11 +185,6 @@ def receive_data():
                 boss_hp = int(boss_health)  # Sync boss HP from server
                 sword_states[p_id] = "combo"
                 sword_frame_index[p_id] = 0
-                if scores[p_id] % 6 == 0 and scores[p_id] != 0:
-                    enemy_attack[p_id] = True
-                    enemy_attack_timer[p_id] = pygame.time.get_ticks()
-                    if current_animation != "cleave":
-                        update_boss_animation("cleave")
                 elif boss_hp <= 0:
                     boss_hp = 0
                     update_boss_animation("die")
@@ -316,30 +311,47 @@ def draw_sword(player_id, pivot):
     sword_rect = sword_image.get_rect(center=(pivot[0], pivot[1] + 130))
     screen.blit(sword_image, sword_rect.topleft)
     
-    # Draw health bar
-    hp_bar_width = 100
-    hp_bar_height = 10
-    max_health = 100  
-    hp_ratio = player_health[player_id] / max_health
-    current_hp_width = int(hp_bar_width * hp_ratio)
-    hp_bar_x = pivot[0] - hp_bar_width // 2
-    # Position the bar 
-    hp_bar_y = pivot[1] + 130 + sword_image.get_height() // 2 + 5  
-    pygame.draw.rect(screen, (255, 0, 0), (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-    pygame.draw.rect(screen, (0, 255, 0), (hp_bar_x, hp_bar_y, current_hp_width, hp_bar_height))
+    # --- Dynamic Health Bar for Player ---
+    player_max_health = 250
+    # Define the full bar length (like boss_hp_bar_length for the boss)
+    player_hp_bar_length = 100  
+    player_hp_bar_height = 10
+    # Calculate ratio similar to boss_hp_ratio: full health corresponds to the full bar length
+    player_hp_ratio = player_max_health / player_hp_bar_length
+    # Determine the width of the health bar based on current health
+    current_hp_bar_width = int(player_health[player_id] / player_hp_ratio)
+    
+    # Position the health bar below the sword image
+    hp_bar_x = pivot[0] - player_hp_bar_length // 2
+    hp_bar_y = pivot[1] + 130 + sword_image.get_height() // 2 + 5
+    
+    # Draw the current health (red bar)
+    pygame.draw.rect(screen, (255, 0, 0), (hp_bar_x, hp_bar_y, current_hp_bar_width, player_hp_bar_height))
+    # Draw the border for the full health bar (white border)
+    pygame.draw.rect(screen, (255, 255, 255), (hp_bar_x, hp_bar_y, player_hp_bar_length, player_hp_bar_height), 2)
 
+
+# Before entering the main loop, initialize the boss attack timer:
+last_boss_attack_time = pygame.time.get_ticks()
 
 running = True
 while running:
+    now = pygame.time.get_ticks()
     screen.fill((0, 0, 0))
-    if game_state == "menu":
-        draw_menu()
-    elif game_state == "high_scores":
-        draw_high_scores()
-    elif game_state == "waiting":
-        draw_text(f"Waiting for Player {player_id}...", WIDTH // 2, 300)
-    elif game_state == "playing":
-        screen.fill((0, 0, 0))  # Clear screen for game start
+    
+    if game_state == "playing":
+        # Trigger boss attack every 3 seconds
+        if now - last_boss_attack_time >= 3000:  # 3000 ms = 3 seconds
+            for pid in [1, 2]:
+                enemy_attack[pid] = True
+                enemy_attack_timer[pid] = now
+            draw_overlay_rectangle(PIVOT_1, overlay_angle, (255, 0, 0, 50))
+            draw_overlay_rectangle(PIVOT_2, overlay_angle, (255, 0, 0, 50))
+            time.sleep(0.75)
+            update_boss_animation("cleave")
+            last_boss_attack_time = now
+
+        # Existing drawing routines
         draw_boss_health()
         draw_boss()
         draw_overlay_rectangle(PIVOT_1, overlay_angle)
@@ -349,68 +361,42 @@ while running:
         draw_sword(1, PIVOT_1)
         draw_sword(2, PIVOT_2)
 
-        # Check for scoring condition only if player is alive
-        for p_id, pivot in [(1, PIVOT_1), (2, PIVOT_2)]:
-            if player_health[p_id] > 0 and abs(players[p_id]["angle"] - overlay_angle) < 5 and players[p_id]["color"] == (0, 255, 0):
-                send_score(p_id)
-
-        # Display scores
-        score_text_1 = font.render(f"Player 1: {scores[1]}", True, (255, 255, 255))
-        screen.blit(score_text_1, (20, 20))
-        score_text_2 = font.render(f"Player 2: {scores[2]}", True, (255, 255, 255))
-        screen.blit(score_text_2, (WIDTH - 150, 20))
-
-        # For each player, draw only if health > 0
-        if player_health[1] > 0:
-            draw_tilting_rectangle(PIVOT_1, players[1]["angle"], players[1]["color"])
-            # Use a red overlay if enemy attack is active
-            if enemy_attack[1]:
-                draw_overlay_rectangle(PIVOT_1, overlay_angle, color=(255, 0, 0, 100))
-            else:
-                draw_overlay_rectangle(PIVOT_1, overlay_angle)
-            draw_sword(1, PIVOT_1)
-        if player_health[2] > 0:
-            draw_tilting_rectangle(PIVOT_2, players[2]["angle"], players[2]["color"])
-            if enemy_attack[2]:
-                draw_overlay_rectangle(PIVOT_2, overlay_angle, color=(255, 0, 0, 100))
-            else:
-                draw_overlay_rectangle(PIVOT_2, overlay_angle)
-            draw_sword(2, PIVOT_2)
-
-        # Process enemy attack resolution
+        # Process enemy attack resolution for each player
         for pid in [1, 2]:
             if enemy_attack[pid]:
-                if pygame.time.get_ticks() - enemy_attack_timer[pid] > ATTACK_WINDOW:
-                    # If player's current angle is within tolerance of overlay_angle, they block the attack.
+                if now - enemy_attack_timer[pid] > ATTACK_WINDOW:
                     if abs(players[pid]["angle"] - overlay_angle) < 5:
-                        # Successful block – no damage taken
+                        # Block successful – no damage taken
                         pass
                     else:
-                        # Attack not blocked – subtract damage if still alive
                         if player_health[pid] > 0:
                             player_health[pid] -= DAMAGE_AMOUNT
                             if player_health[pid] < 0:
                                 player_health[pid] = 0
-                    enemy_attack[pid] = False  # Reset attack flag
+                    enemy_attack[pid] = False
 
-                if not game_over_sent:
-                    if player_health[1] <= 0 and player_health[2] <= 0:
-                        # Send GAME_OVER for each player and transition to high scores
-                        if player_health[1] <= 0:
-                            client_socket.sendto(f"GAME_OVER,1,{player_health[1]}".encode(), (SERVER_IP, SERVER_PORT))
-                        if player_health[2] <= 0:
-                            client_socket.sendto(f"GAME_OVER,2,{player_health[2]}".encode(), (SERVER_IP, SERVER_PORT))
-                        game_over_sent = True
-                        game_state = "high_scores"
-
-                    # Send GAME_OVER for each player that is now out.
-                    if player_health[1] <= 0:
-                        client_socket.sendto(f"GAME_OVER,1,{player_health[1]}".encode(), (SERVER_IP, SERVER_PORT))
-                    if player_health[2] <= 0:
-                        client_socket.sendto(f"GAME_OVER,2,{player_health[2]}".encode(), (SERVER_IP, SERVER_PORT))
+            # Send GAME_OVER messages if necessary
+            if not game_over_sent:
+                if player_health[1] <= 0 or player_health[2] <= 0:
+                    client_socket.sendto(f"GAME_OVER,1,{player_health[1]}".encode(), (SERVER_IP, SERVER_PORT))
+                    client_socket.sendto(f"GAME_OVER,2,{player_health[2]}".encode(), (SERVER_IP, SERVER_PORT))
                     game_over_sent = True
-                    game_state = "high_scores"  # Transition locally to high scores
+                    game_state = "high_scores"
 
+        # Display player scores
+        score_text_1 = font.render(f"Player 1: {scores[1]}", True, (255, 255, 255))
+        screen.blit(score_text_1, (20, 20))
+        score_text_2 = font.render(f"Player 2: {scores[2]}", True, (255, 255, 255))
+        screen.blit(score_text_2, (WIDTH - 150, 20))
+    
+    # Other game states (menu, high_scores, waiting) remain unchanged
+    if game_state == "menu":
+        draw_menu()
+    elif game_state == "high_scores":
+        draw_high_scores()
+    elif game_state == "waiting":
+        draw_text(f"Waiting for Player {player_id}...", WIDTH // 2, 300)
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -428,4 +414,6 @@ while running:
     
     pygame.display.flip()
     clock.tick(60)
+
 pygame.quit()
+
