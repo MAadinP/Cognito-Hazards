@@ -1,9 +1,9 @@
-12:47:17 **** Incremental Build of configuration Nios II for project accelerometer ****
+14:40:30 **** Incremental Build of configuration Nios II for project accelerometer ****
 make all 
 Info: Building ../accelerometer_bsp/
 C:/intelFPGA_lite/18.1/nios2eds/bin/gnu/H-x86_64-mingw32/bin/make --no-print-directory -C ../accelerometer_bsp/
 [BSP build complete]
 [accelerometer build complete]
 
-12:47:18 Build Finished (took 590ms)
+14:40:32 Build Finished (took 1s.141ms)
 

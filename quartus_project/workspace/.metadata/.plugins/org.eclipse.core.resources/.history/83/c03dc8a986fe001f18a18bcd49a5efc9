@@ -230,8 +230,8 @@ int main(void)
 //        alt_printf("%.2f %f ", x_processed, y_processed);
 
 
-        float_to_string_custom(x_processed, x_str, 3);
-        float_to_string_custom(y_processed, y_str, 3);
+        float_to_string_custom(x_processed, x_str, 2);
+        float_to_string_custom(y_processed, y_str, 6);
 
             // Use alt_printf to print the converted strings.
             alt_printf("%s %s\n", x_str, y_str);

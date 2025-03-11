@@ -12,9 +12,9 @@
  #include "alt_types.h"
 
  #include "sys/alt_stdio.h"
- 
- #define FILTER_ORDER 50  
- 
+
+ #define FILTER_ORDER 50
+
  // this will need tuning for the game
  static float coeffs[FILTER_ORDER] = {
      0.0046f,  0.0074f, -0.0024f, -0.0071f,  0.0033f,  0.0001f, -0.0094f,  0.0040f,  0.0044f,
@@ -24,17 +24,17 @@
     -0.0179f,  0.0114f,  0.0030f, -0.0133f,  0.0044f,  0.0040f, -0.0094f,  0.0001f,  0.0033f,
     -0.0071f, -0.0024f,  0.0074f,  0.0046f
  };
- 
+
  float fir_filter(float new_sample)
  {
      static float buffer[FILTER_ORDER] = {0.0f};
      static int index = 0;
- 
+
      float output = 0.0f;
      int i, j;
- 
+
      buffer[index] = new_sample;
- 
+
      j = index;
      for (i = 0; i < FILTER_ORDER; i++) {
          output += buffer[j] * coeffs[i];
@@ -42,36 +42,36 @@
          if (j < 0)
              j = FILTER_ORDER - 1;
      }
- 
+
      index++;
      if (index >= FILTER_ORDER)
          index = 0;
- 
+
      return output;
  }
 
  #define OFFSET -32
  #define PWM_PERIOD 16
- 
+
  alt_8 pwm = 0;
  alt_u8 led;
  int level;
- 
+
  void led_write(alt_u8 led_pattern) {
      IOWR(LED_BASE, 0, led_pattern);
  }
- 
+
  void convert_read(alt_32 acc_read, int *level, alt_u8 *led) {
      acc_read += OFFSET;
      alt_u8 val = (acc_read >> 6) & 0x07;
      *led = (8 >> val) | (8 << (8 - val));
      *level = (acc_read >> 1) & 0x1f;
  }
- 
+
  void sys_timer_isr(void* context)
  {
      IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_BASE, 0);
- 
+
      if (pwm < abs(level)) {
          if (level < 0)
              led_write(led << 1);
@@ -80,13 +80,13 @@
      } else {
          led_write(led);
      }
- 
+
      if (pwm > PWM_PERIOD)
          pwm = 0;
      else
          pwm++;
  }
- 
+
  void timer_init(void* isr)
  {
      IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_BASE, 0x0003);
@@ -104,7 +104,7 @@
          return -1;
      return ch;
  }
- 
+
  int main(void)
  {
      alt_putstr("Duel Game\n");
@@ -112,19 +112,19 @@
      alt_u8 out;
      alt_up_accelerometer_spi_dev * acc_dev;
      acc_dev = alt_up_accelerometer_spi_open_dev("/dev/accelerometer_spi");
-     if (acc_dev == NULL) { 
+     if (acc_dev == NULL) {
          alt_putstr("Error: Could not open accelerometer device\n");
          return 1;
      }
- 
+
      timer_init(sys_timer_isr);
- 
-     int mode = 1;  
+
+     int mode = 1;
     //  alt_printf("Default mode: %d (2 = calibration, 1 = filtering, 0 = raw)\n", mode);
     alt_printf("Default mode: %d (1 = filtering, 0 = raw)\n", mode);
- 
+
      while (1) {
- 
+
         int cmd = get_command_char();
         if (cmd != -1) {
              if (cmd == '0') {
@@ -147,12 +147,12 @@
                  alt_printf("Unrecognized command: %c\n", cmd);
              }
          }
- 
+
         if (mode != 0) {
             if (mode == 1) {
                 alt_up_accelerometer_spi_read_x_axis(acc_dev, &x_read);
-                alt_printf("Raw data: %d\n", x_read);
-        
+                alt_printf("Raw data: %x\n", x_read);
+
                 float x_value = (float)x_read;
                 float processed_value = x_value;
 
@@ -162,16 +162,18 @@
                 convert_read((alt_32)processed_value, &level, &led);
 
                 // add the uart return data here
-                out = *level;
-                alt_putstring(out);
+//                out = *level;
+//                alt_putstring(out);
+//                alt_putstr(std::tostring(processed_value));
+//                alt_printf("Filtered x: %.2f\n", processed_value);
+
             }
             // else if (mode == 2) {
-            //     // idk what we want for calibration at this stage but that goes here 
+            //     // idk what we want for calibration at this stage but that goes here
             // }
         }
- 
+
      }
- 
+
      return 0;
  }
- 
