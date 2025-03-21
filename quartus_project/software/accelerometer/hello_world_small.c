@@ -118,7 +118,6 @@ void int_to_str(int num, char *buf) {
         temp[i++] = '0' + (num % 10);
         num /= 10;
     }
-    // Reverse the digits into the output buffer.
     int j;
     for (j = 0; j < i; j++) {
         buf[j] = temp[i - j - 1];
@@ -126,61 +125,48 @@ void int_to_str(int num, char *buf) {
     buf[i] = '\0';
 }
 
-// Custom function to convert a float to a string with a given precision.
-// 'precision' is the number of digits after the decimal point.
 void float_to_string_custom(float num, char *buf, int precision) {
     char *ptr = buf;
 
-    // Handle negative numbers.
     if (num < 0) {
         *ptr++ = '-';
         num = -num;
     }
 
-    // Separate the integer part.
     int int_part = (int)num;
     char int_buf[12];
     int_to_str(int_part, int_buf);
 
-    // Copy the integer part into the output buffer.
     char *p = int_buf;
     while (*p) {
         *ptr++ = *p++;
     }
 
-    // If precision is specified, process the fractional part.
     if (precision > 0) {
         *ptr++ = '.';
         float fractional = num - int_part;
 
-        // Calculate multiplier for the required precision (10^precision).
         int multiplier = 1;
         for (int i = 0; i < precision; i++) {
             multiplier *= 10;
         }
 
-        // Convert the fractional part to an integer (with rounding).
         int frac_int = (int)(fractional * multiplier + 0.5f);
 
-        // Convert the fractional integer to string.
         char frac_buf[12];
         int_to_str(frac_int, frac_buf);
 
-        // Determine the length of the fractional string.
         int len = 0;
         p = frac_buf;
         while (*p++) {
             len++;
         }
 
-        // If the fractional part is shorter than the required precision,
-        // pad with leading zeros.
         int pad = precision - len;
         while (pad-- > 0) {
             *ptr++ = '0';
         }
 
-        // Copy the fractional part.
         p = frac_buf;
         while (*p) {
             *ptr++ = *p++;
@@ -217,54 +203,33 @@ int main(void)
        if (cmd != -1) {
             if (cmd == '0') {
                 mode = 0;
-//                alt_printf("Switched to Mode 0 (off).\n");
             }
             else if (cmd == '1') {
                 mode = 1;
-//                alt_printf("Switched to Mode 1 (filtering).\n");
             }
-           //  else if (cmd == '2') {
-           //     mode = 2;
-           //     alt_printf("Switched to Mode 2 (calibration).\n");
-           // }
             else if (cmd == 'q' || cmd == 'Q') {
                 alt_putstr("Exiting...\n");
                 break;
             }
             else {
             	mode = 0;
-//                alt_printf("Unrecognized command: %c\n", cmd);
             }
         }
 
-//       if (mode != 0) {
-            if (mode == 1) {
-                alt_up_accelerometer_spi_read_x_axis(acc_dev, &x_read);
-                alt_up_accelerometer_spi_read_y_axis(acc_dev, &y_read);
-            //    alt_printf("Raw data: %x\n", x_read);
+        if (mode == 1) {
+            alt_up_accelerometer_spi_read_x_axis(acc_dev, &x_read);
+            alt_up_accelerometer_spi_read_y_axis(acc_dev, &y_read);
 
-                x_value = (float)x_read;
-                x_processed = fir_filter(x_value);
-                y_value = (float)y_read;
-                y_processed = fir_filter(y_value);
+            x_value = (float)x_read;
+            x_processed = fir_filter(x_value);
+            y_value = (float)y_read;
+            y_processed = fir_filter(y_value);
 
-                float_to_string_custom(x_processed, x_str, 3);
-                float_to_string_custom(y_processed, y_str, 3);
+            float_to_string_custom(x_processed, x_str, 3);
+            float_to_string_custom(y_processed, y_str, 3);
 
-                    // Use alt_printf to print the converted strings.
-                    alt_printf("%s %s\n", x_str, y_str);
-
-               // add the uart return data here
-//                out = *level;
-//                alt_putstring(out);
-//                alt_putstr(std::tostring(processed_value));
-//                alt_printf("Filtered x: %.2f\n", processed_value);
-
-        //    }
-           // else if (mode == 2) {
-           //     // idk what we want for calibration at this stage but that goes here
-           // }
-       }
+            alt_printf("%s %s\n", x_str, y_str);
+        }
 
     }
 
